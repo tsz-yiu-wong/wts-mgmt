@@ -15,10 +15,11 @@ interface AddAccountDialogProps {
 
 export function AddAccountDialog({ isOpen, onClose }: AddAccountDialogProps) {
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [step, setStep] = useState<'input' | 'loading' | 'verification' | 'waiting' | 'completing'>('input')
+  const [step, setStep] = useState<'input' | 'loading' | 'verification' | 'waiting' | 'completing' | 'regenerating'>('input')
   const [sessionId, setSessionId] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
   const [error, setError] = useState('')
+  const [isRegeneratingCode, setIsRegeneratingCode] = useState(false)
   
   const { addAccount } = useAccountStore()
 
@@ -151,6 +152,7 @@ export function AddAccountDialog({ isOpen, onClose }: AddAccountDialogProps) {
     setSessionId('')
     setVerificationCode('')
     setError('')
+    setIsRegeneratingCode(false)
   }
 
   const handleClose = () => {
@@ -161,6 +163,46 @@ export function AddAccountDialog({ isOpen, onClose }: AddAccountDialogProps) {
   const handleContinueManually = () => {
     setStep('completing')
     pollForLoginComplete(sessionId)
+  }
+
+  const handleRegenerateCode = async () => {
+    if (isRegeneratingCode) return // 防止重复点击
+    
+    setIsRegeneratingCode(true)
+    setError('')
+    setStep('regenerating')
+
+    try {
+      console.log('🔄 重新获取验证码...')
+      
+      const response = await fetch('/api/automation/verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          action: 'regenerate'
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.code) {
+        setVerificationCode(data.code)
+        setStep('waiting')
+        console.log('✅ 验证码重新获取成功:', data.code)
+      } else {
+        setError(data.error || '重新获取验证码失败')
+        setStep('waiting') // 回到等待状态，显示原验证码
+      }
+    } catch (error) {
+      console.error('重新获取验证码网络错误:', error)
+      setError('网络错误，请重试')
+      setStep('waiting')
+    } finally {
+      setIsRegeneratingCode(false)
+    }
   }
 
   return (
@@ -234,14 +276,54 @@ export function AddAccountDialog({ isOpen, onClose }: AddAccountDialogProps) {
                 </div>
               </div>
               
+              {error && (
+                <div className="text-sm text-red-200 bg-red-500/30 p-3 rounded border border-red-400/30 backdrop-blur-sm mb-4">
+                  {error}
+                </div>
+              )}
+              
               <div className="space-y-3">
                 <p className="text-white/90 text-sm">
                   输入验证码后，点击下方按钮继续
                 </p>
-                <Button onClick={handleContinueManually} className="w-full bg-green-600 hover:bg-green-700">
-                  我已输入验证码，继续登录
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleContinueManually} 
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={isRegeneratingCode}
+                  >
+                    我已输入验证码，继续登录
+                  </Button>
+                  <Button 
+                    onClick={handleRegenerateCode} 
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+                    disabled={isRegeneratingCode}
+                  >
+                    {isRegeneratingCode ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        重新获取中...
+                      </>
+                    ) : (
+                      '重新获取验证码'
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-white/60">
+                  如果没有收到验证码，可以点击重新获取
+                </p>
               </div>
+            </div>
+          )}
+
+          {step === 'regenerating' && (
+            <div className="text-center py-6">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-white" />
+              <p className="text-white/90">正在重新获取验证码...</p>
+              <p className="text-sm text-white/70 mt-2">
+                请稍等，系统正在为您生成新的验证码
+              </p>
             </div>
           )}
 

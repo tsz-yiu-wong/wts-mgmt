@@ -25,6 +25,7 @@ export interface AutomationSession {
   browserContext?: any
   page?: any
   status: 'initializing' | 'waiting_code' | 'logged_in' | 'error'
+  loginMonitoringActive?: boolean
 }
 
 export interface VerificationCodeResponse {

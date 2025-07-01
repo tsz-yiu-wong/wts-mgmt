@@ -60,10 +60,43 @@ export function AccountList({
     }
   };
 
-  const handleOpenAccount = (account: Account) => {
+  const handleOpenAccount = async (account: Account) => {
     selectAccount(account);
-    // TODO: 实际打开WhatsApp窗口的逻辑
-    console.log("打开账号:", account.phone_number);
+    
+    try {
+      console.log("正在打开账号:", account.phone_number);
+      
+      const response = await fetch('/api/automation/windows', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          accountId: account.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("窗口打开成功:", data.windowUrl);
+        console.log("窗口ID:", data.windowId);
+        
+        // 可以在这里添加用户反馈
+        // 例如：toast通知或状态更新
+        
+        // 如果需要在新标签页打开
+        // window.open(data.windowUrl, '_blank');
+        
+      } else {
+        console.error("打开窗口失败:", data.error);
+        // 可以在这里添加错误处理
+        // 例如：显示错误toast
+      }
+    } catch (error) {
+      console.error("网络错误:", error);
+      // 处理网络错误
+    }
   };
 
   const handleDeleteAccount = async (accountId: string) => {
