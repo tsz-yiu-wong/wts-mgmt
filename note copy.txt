@@ -1,0 +1,21 @@
+# WhatsApp 多账号管理应用
+
+## 简介：
+这是一个轻量化、简易的whatsapp多账号指纹浏览器管理应用。只需要一个账号列表的界面，提供“添加账号”，“同步账号”，“打开”三个按钮。用户添加账号后，保存登录信息，每次点击指定账号的“打开”可以进入该账号的WhatsApp web，多个账号不会相互冲突，也不会隔一段时间就要重新登录。
+
+## 核心流程图
+添加账号:
+  用户输入手机号 -> 后端 Playwright 启动浏览器 -> 按照自动化脚本完成登录 -> 保存 userDataDir.zip 到 Supabase
+
+同步账号:
+  用户点击同步 -> 从 Supabase 下载所有 userDataDir -> 解压本地保存
+
+打开账号:
+  用户点击“打开” -> 使用本地已有 userDataDir 启动新的 Chrome 实例（独立目录） -> 自动加载 WhatsApp Web
+
+## 技术栈：
+1. 数据库：Supabase
+2. 后端部署：Railway
+3. 文件存储：Supabase
+4. 自动化浏览器	Playwright（推荐，支持多浏览器）
+5. 前端：Electron App

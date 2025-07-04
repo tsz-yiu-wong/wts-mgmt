@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp 多账号管理器</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 自定义标题栏 -->
+  <div class="titlebar">
+    <div class="titlebar-drag-region">
+      <span class="app-title">WhatsApp 多账号管理器</span>
+    </div>
+    <div class="titlebar-controls">
+      <button class="titlebar-button minimize" id="minimizeBtn">
+        <svg width="10" height="10" viewBox="0 0 10 10">
+          <path d="M0,5 L10,5" stroke="currentColor" stroke-width="1"/>
+        </svg>
+      </button>
+      <button class="titlebar-button maximize" id="maximizeBtn">
+        <svg width="10" height="10" viewBox="0 0 10 10">
+          <rect x="0" y="0" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1"/>
+        </svg>
+      </button>
+      <button class="titlebar-button close" id="closeBtn">
+        <svg width="10" height="10" viewBox="0 0 10 10">
+          <path d="M0,0 L10,10 M10,0 L0,10" stroke="currentColor" stroke-width="1"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 主内容区域 -->
+  <div class="main-container">
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <button class="btn btn-primary" id="addAccountBtn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
+        </svg>
+        添加账号
+      </button>
+      <button class="btn btn-secondary" id="syncAccountsBtn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+          <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+        </svg>
+        同步账号
+      </button>
+      <div class="toolbar-spacer"></div>
+      <div class="stats">
+        <span class="stats-item">总账号: <span id="totalAccounts">0</span></span>
+        <span class="stats-item">在线: <span id="onlineAccounts">0</span></span>
+      </div>
+    </div>
+
+    <!-- 账号列表 -->
+    <div class="accounts-container">
+      <div class="accounts-header">
+        <span class="col-status">状态</span>
+        <span class="col-phone">手机号</span>
+        <span class="col-last-login">最后登录</span>
+        <span class="col-actions">操作</span>
+      </div>
+      
+      <div class="accounts-list" id="accountsList">
+        <!-- 账号项将在这里动态生成 -->
+      </div>
+    </div>
+
+    <!-- 空状态提示 -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <svg width="64" height="64" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+        </svg>
+      </div>
+      <h3>还没有添加任何账号</h3>
+      <p>点击上方的"添加账号"按钮开始管理您的 WhatsApp 账号</p>
+      <button class="btn btn-primary" onclick="document.getElementById('addAccountBtn').click()">
+        立即添加账号
+      </button>
+    </div>
+  </div>
+
+  <!-- 添加账号模态框 -->
+  <div class="modal" id="addAccountModal">
+    <div class="modal-overlay" onclick="closeAddAccountModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>添加新账号</h3>
+        <button class="modal-close" onclick="closeAddAccountModal()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="addAccountForm">
+          <div class="form-group">
+            <label for="phoneNumber">手机号码</label>
+            <input 
+              type="tel" 
+              id="phoneNumber" 
+              placeholder="请输入手机号（如: +86 138 8888 8888）"
+              required
+            />
+            <small class="form-hint">请输入完整的国际格式手机号码</small>
+          </div>
+          
+          <div class="form-group">
+            <div class="info-box">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+              </svg>
+              <div>
+                <strong>登录说明：</strong>
+                <p>点击添加后，系统会自动打开 WhatsApp Web，请准备好手机扫描二维码完成登录。</p>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddAccountModal()">
+          取消
+        </button>
+        <button type="submit" class="btn btn-primary" form="addAccountForm" id="confirmAddBtn">
+          开始添加
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载提示 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p id="loadingText">正在处理...</p>
+    </div>
+  </div>
+
+  <!-- 通知容器 -->
+  <div class="notification-container" id="notificationContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html> 
